@@ -129,22 +129,18 @@ namespace parkitect_workshop_upload
 
         static int RunOptions(Options options)
         {
-            String ParkitectPath = Path.Combine(options.Path, "Game");
-            UpdateProjectHintsAndOutput(options.Path, Path.Combine(ParkitectPath, "Parkitect_Data/Managed"),
-                options.Path + "/bin");
-
-            // DepotDownloader downloader = new DepotDownloader();
-            // if (downloader.Login(options.SteamUsername, options.SteamPassword))
-            // {
-            //     String ParkitectPath = Path.Combine(options.Path, "Game");
-            //     downloader.DownloadDepot(ParkitectPath, 453090, 453094, "public", s => s.EndsWith(".dll")).Wait();
-            //     UpdateProjectHintsAndOutput(options.Path, Path.Combine(ParkitectPath, "Parkitect_Data/Managed"),
-            //         options.Path + "/bin");
-            // }
-            // else
-            // {
-            //     Console.WriteLine("Failed to login");
-            // }
+            DepotDownloader downloader = new DepotDownloader();
+            if (downloader.Login(options.SteamUsername, options.SteamPassword))
+            {
+                String ParkitectPath = Path.Combine(options.Path, "Game");
+                downloader.DownloadDepot(ParkitectPath, 453090, 453094, "public", s => s.EndsWith(".dll")).Wait();
+                UpdateProjectHintsAndOutput(options.Path, Path.Combine(ParkitectPath, "Parkitect_Data/Managed"),
+                    options.Path + "/bin");
+            }
+            else
+            {
+                Console.WriteLine("Failed to login");
+            }
 
             Console.WriteLine("Completed");
             Environment.Exit(0);
