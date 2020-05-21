@@ -29,4 +29,7 @@ inputs:
   contentPath:
     description: 'Path of folder to upload'
     required: true
+  project:
+    description: 'Path to csproj'
+    required: true
 
