@@ -26,8 +26,8 @@ namespace parkitect_workshop_upload
     {
         static void Main(string[] args)
         {
-            CommandLine.Parser.Default.ParseArguments<Options>(args).WithParsed(RunOptions)
-                .WithNotParsed(HandleParseError);
+            CommandLine.Parser.Default.ParseArguments<Options>(args).MapResult(
+                (Options opts) => RunOptions(opts), errs => 1);
         }
 
         static void UpdateProjectHintsAndOutput(String projectPath, String assemblyPath, String output)
@@ -44,9 +44,12 @@ namespace parkitect_workshop_upload
             }
 
             XmlDocument document = new XmlDocument();
+            Console.WriteLine("Opening csproj: {0}", Path.Combine(projectPath, csprojFile));
             document.Load(Path.Combine(projectPath, csprojFile));
 
             var manager = new XmlNamespaceManager(document.NameTable);
+            manager.AddNamespace("x", "http://schemas.microsoft.com/developer/msbuild/2003");
+
             var toReference = document.SelectNodes("//x:Reference", manager)
                 .Cast<XmlNode>();
 
@@ -55,7 +58,7 @@ namespace parkitect_workshop_upload
             {
                 if (file.EndsWith(".dll"))
                 {
-                    parkitectAssemblies.Add(file.Replace(".dll", "").Trim());
+                    parkitectAssemblies.Add(  Path.GetFileName(file).Replace(".dll", "").Trim());
                 }
             }
 
@@ -63,27 +66,45 @@ namespace parkitect_workshop_upload
             {
                 var inc = node.Attributes["Include"];
                 String targetAssembly = inc.Value.Split(',').FirstOrDefault();
+
                 if (parkitectAssemblies.Contains(targetAssembly))
                 {
-                    var hints = node.SelectNodes("//x:Hint");
+                    var isPrivate = node.SelectNodes("//x:Private",manager);
+                    if (isPrivate.Count == 0) {
+                        var privateNode = document.CreateElement("Private",
+                            "http://schemas.microsoft.com/developer/msbuild/2003");
+                        privateNode.InnerText = "False";
+                        node.AppendChild(privateNode);
+                    }
+                    else
+                    {
+                        foreach (var prv in isPrivate.Cast<XmlNode>())
+                        {
+                            prv.InnerText = "False";
+                        }
+                    }
+
+                    var hints = node.SelectNodes("//x:HintPath",manager);
                     if (hints.Count > 0)
                     {
                         bool foundAssembly = false;
                         foreach (var hint in hints.Cast<XmlNode>())
                         {
-                            String assembly = Path.GetFileName(hint.InnerText).Replace(".dll", "");
-                            if (assembly == targetAssembly)
+                            String assembly = Path.GetFileName(hint.InnerText).Replace(".dll", "").Trim();
+                            if (assembly.Equals(targetAssembly))
                             {
                                 foundAssembly = true;
-                                hint.InnerText = Path.Join(assemblyPath, targetAssembly + ".dll");
-                                Console.WriteLine("Resolved Assembly {0} -- path: {1}", targetAssembly, hint.InnerText);
+                                String target =  Path.Join(assemblyPath, targetAssembly + ".dll");
+                                Console.WriteLine("Found Existing Assembly {0} -- Updating path: {1} to {2}", targetAssembly, hint.InnerText, target);
+                                hint.InnerText = target;
                                 break;
                             }
                         }
 
                         if (!foundAssembly)
                         {
-                            var hint = document.CreateElement("HintPath", document.NamespaceURI);
+                            var hint = document.CreateElement("HintPath",
+                                "http://schemas.microsoft.com/developer/msbuild/2003");
                             hint.InnerText = Path.Join(assemblyPath, targetAssembly + ".dll");
                             node.AppendChild(hint);
                             Console.WriteLine("Resolved Assembly {0} -- path: {1}", targetAssembly, hint.InnerText);
@@ -92,7 +113,8 @@ namespace parkitect_workshop_upload
                     }
                     else
                     {
-                        var hint = document.CreateElement("HintPath", document.NamespaceURI);
+                        var hint = document.CreateElement("HintPath",
+                            "http://schemas.microsoft.com/developer/msbuild/2003");
                         hint.InnerText = Path.Join(assemblyPath, targetAssembly + ".dll");
 
                         Console.WriteLine("Resolved Assembly {0} -- path: {1}", targetAssembly, hint.InnerText);
@@ -101,7 +123,7 @@ namespace parkitect_workshop_upload
                 }
             }
 
-            foreach (var node in document.SelectNodes("//x:OutputPath").Cast<XmlNode>())
+            foreach (var node in document.SelectNodes("//x:OutputPath", manager).Cast<XmlNode>())
             {
                 node.InnerText = output;
             }
@@ -110,7 +132,7 @@ namespace parkitect_workshop_upload
         }
 
 
-        static void RunOptions(Options options)
+        static int RunOptions(Options options)
         {
             DepotDownloader downloader = new DepotDownloader();
             if (downloader.Login(options.SteamUsername, options.SteamPassword))
@@ -124,6 +146,9 @@ namespace parkitect_workshop_upload
             {
                 Console.WriteLine("Failed to login");
             }
+
+            Console.WriteLine("Completed");
+            return 0;
         }
 
         static void HandleParseError(IEnumerable<Error> errs)

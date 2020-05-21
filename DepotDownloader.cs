@@ -88,8 +88,6 @@ namespace parkitect_workshop_upload
             // retrieve app info
             steam3.RequestAppInfo(appId);
 
-            Console.WriteLine("Using app branch: '{0}'.", branch);
-
             var depotIDs = new List<uint>();
             KeyValue depots = GetSteam3AppSection(appId, EAppInfoSection.Depots);
 
@@ -149,14 +147,12 @@ namespace parkitect_workshop_upload
                 return;
             }
 
-            ulong complete_download_size = 0;
+
             ulong size_downloaded = 0;
-            foreach (var file in depotManifest.Files.AsParallel().Where(f => includeFile(f.FileName)).ToList())
+            foreach (var folder in depotManifest.Files.AsParallel().Where(f => f.Flags.HasFlag(EDepotFileFlag.Directory))
+                .ToList())
             {
-                if (file.Flags.HasFlag(EDepotFileFlag.Directory))
-                {
-                    Directory.CreateDirectory(Path.Join(path, file.FileName));
-                }
+                Directory.CreateDirectory(Path.Join(path, folder.FileName));
             }
 
             ulong TotalBytesCompressed = 0;
@@ -164,9 +160,16 @@ namespace parkitect_workshop_upload
             ulong DepotBytesCompressed = 0;
             ulong DepotBytesUncompressed = 0;
 
-            var semaphore = new SemaphoreSlim( 10);
-            var files = depotManifest.Files.AsParallel().Where(f => f.Flags.HasFlag(EDepotFileFlag.Directory))
+            var semaphore = new SemaphoreSlim(10);
+            var files = depotManifest.Files.AsParallel().Where(f => !f.Flags.HasFlag(EDepotFileFlag.Directory) && includeFile(f.FileName))
                 .ToArray();
+
+            ulong complete_download_size = 0;
+            foreach (var file in files)
+            {
+                complete_download_size += file.TotalSize;
+            }
+
             var tasks = new Task[files.Length];
             for (var i = 0; i < files.Length; i++)
             {
@@ -285,6 +288,10 @@ namespace parkitect_workshop_upload
 
                 tasks[i] = task;
             }
+
+            await Task.WhenAll(tasks).ConfigureAwait(false);
+            Console.WriteLine("Depot {0} - Downloaded {1} bytes ({2} bytes uncompressed)", depotId,
+                DepotBytesCompressed, DepotBytesUncompressed);
         }
 
         string GetAppOrDepotName( uint depotId, uint appId )
