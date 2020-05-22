@@ -194,6 +194,12 @@ namespace Parkitool
                             fs.SetLength((long) file.TotalSize);
                             neededChunks = new List<DepotManifest.ChunkData>(file.Chunks);
                         }
+                        else
+                        {
+                            fs = File.Open(fileFinalPath, FileMode.Truncate);
+                            fs.SetLength((long) file.TotalSize);
+                            neededChunks = new List<DepotManifest.ChunkData>(file.Chunks);
+                        }
 
                         foreach (var chunk in neededChunks)
                         {
