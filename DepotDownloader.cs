@@ -5,10 +5,9 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using DepotDownloader;
 using SteamKit2;
 
-namespace parkitect_workshop_upload
+namespace Parkitool
 {
     public class DepotDownloader
     {

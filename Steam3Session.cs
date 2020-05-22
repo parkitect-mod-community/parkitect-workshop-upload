@@ -8,7 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
  using SteamKit2.Internal;
 
- namespace DepotDownloader
+ namespace Parkitool
 {
 
     class Steam3Session

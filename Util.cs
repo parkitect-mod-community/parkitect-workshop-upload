@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace DepotDownloader
+namespace Parkitool
 {
     static class Util
     {

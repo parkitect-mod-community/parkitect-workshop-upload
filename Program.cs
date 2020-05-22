@@ -5,9 +5,10 @@ using System.Linq;
 using System.Xml;
 using CommandLine;
 
-namespace parkitect_workshop_upload
+namespace Parkitool
 {
-    class Options
+    [Verb("workspace", HelpText = "Configure project workspace by downloading Parkitect assemblies and update csproj.")]
+    class WorkspaceOptions
     {
         [Option('u', "username", Required = true, HelpText = "Steam Username")]
         public String SteamUsername { get; set; }
@@ -22,12 +23,18 @@ namespace parkitect_workshop_upload
         public String Output { get; set; }
     }
 
+    [Verb("upload", HelpText = "Upload a parkitect mod to steam. TODO: need to implement")]
+    class UploadOptions
+    {
+    }
+
     class Program
     {
         static int Main(string[] args)
         {
-            return Parser.Default.ParseArguments<Options>(args).MapResult(
-                (Options opts) => RunOptions(opts), errs => 1);
+            return Parser.Default.ParseArguments<WorkspaceOptions,UploadOptions>(args).MapResult(
+                (WorkspaceOptions opts) => SetupWorkspaceOption(opts),
+                (UploadOptions ops) => 1, errs => 1);
         }
 
         static void UpdateProjectHintsAndOutput(String projectPath, String assemblyPath, String output)
@@ -127,15 +134,15 @@ namespace parkitect_workshop_upload
         }
 
 
-        static int RunOptions(Options options)
+        static int SetupWorkspaceOption(WorkspaceOptions workspaceOptions)
         {
             DepotDownloader downloader = new DepotDownloader();
-            if (downloader.Login(options.SteamUsername, options.SteamPassword))
+            if (downloader.Login(workspaceOptions.SteamUsername, workspaceOptions.SteamPassword))
             {
-                String ParkitectPath = Path.Combine(options.Path, "Game");
+                String ParkitectPath = Path.Combine(workspaceOptions.Path, "Game");
                 downloader.DownloadDepot(ParkitectPath, 453090, 453094, "public", s => s.EndsWith(".dll")).Wait();
-                UpdateProjectHintsAndOutput(options.Path, Path.Combine(ParkitectPath, "Parkitect_Data/Managed"),
-                    options.Path + "/bin");
+                UpdateProjectHintsAndOutput(workspaceOptions.Path, Path.Combine(ParkitectPath, "Parkitect_Data/Managed"),
+                    workspaceOptions.Path + "/bin");
             }
             else
             {

@@ -3,7 +3,7 @@
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFramework>netcoreapp3.1</TargetFramework>
-        <RootNamespace>parkitect_workshop_upload</RootNamespace>
+        <RootNamespace>ParkiTool</RootNamespace>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<DebugType>embedded</DebugType>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
