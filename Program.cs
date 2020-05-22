@@ -142,7 +142,7 @@ namespace Parkitool
                 String ParkitectPath = Path.Combine(workspaceOptions.Path, "Game");
                 downloader.DownloadDepot(ParkitectPath, 453090, 453094, "public", s => s.EndsWith(".dll")).Wait();
                 UpdateProjectHintsAndOutput(workspaceOptions.Path, Path.Combine(ParkitectPath, "Parkitect_Data/Managed"),
-                    workspaceOptions.Path + "/bin");
+                    workspaceOptions.Output);
             }
             else
             {
