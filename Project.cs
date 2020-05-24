@@ -20,6 +20,8 @@ namespace Parkitool
         public class ContentGroup {
             public String Include { get; set; }
             public CopyOuputRule CopyToOutput { get; set; }
+
+            public String TargetPath { get; set; }
         }
 
         public class AssemblyInfo
@@ -162,28 +164,61 @@ namespace Parkitool
                 var contentGroup = document.CreateElement("ItemGroup");
                 foreach (var cnt in Content)
                 {
-                    var content = document.CreateElement("Content");
-                    if (cnt.CopyToOutput != CopyOuputRule.NULL)
+                    if (String.IsNullOrEmpty(cnt.TargetPath))
                     {
-                        var copyToOutput = document.CreateElement("CopyToOutputDirectory");
-                        switch (cnt.CopyToOutput)
+                        var content = document.CreateElement("Content");
+                        if (cnt.CopyToOutput != CopyOuputRule.NULL)
                         {
-                            case CopyOuputRule.ALWAYS:
-                                copyToOutput.InnerText = "Always";
-                                break;
-                            case CopyOuputRule.NEVER:
-                                copyToOutput.InnerText = "Never";
-                                break;
-                            case CopyOuputRule.PRESERVE_NEWEST:
-                                copyToOutput.InnerText = " PreserveNewest";
-                                break;
+                            var copyToOutput = document.CreateElement("CopyToOutputDirectory");
+                            switch (cnt.CopyToOutput)
+                            {
+                                case CopyOuputRule.ALWAYS:
+                                    copyToOutput.InnerText = "Always";
+                                    break;
+                                case CopyOuputRule.NEVER:
+                                    copyToOutput.InnerText = "Never";
+                                    break;
+                                case CopyOuputRule.PRESERVE_NEWEST:
+                                    copyToOutput.InnerText = " PreserveNewest";
+                                    break;
+                            }
+
+                            content.AppendChild(copyToOutput);
                         }
 
-                        content.AppendChild(copyToOutput);
+                        content.Attributes.Append(CreateAttribute(document, "Include", cnt.Include));
+                        contentGroup.AppendChild(content);
+                    }
+                    else
+                    {
+                        var content = document.CreateElement("ContentWithTargetPath");
+                        if (cnt.CopyToOutput != CopyOuputRule.NULL)
+                        {
+                            var copyToOutput = document.CreateElement("CopyToOutputDirectory");
+                            switch (cnt.CopyToOutput)
+                            {
+                                case CopyOuputRule.ALWAYS:
+                                    copyToOutput.InnerText = "Always";
+                                    break;
+                                case CopyOuputRule.NEVER:
+                                    copyToOutput.InnerText = "Never";
+                                    break;
+                                case CopyOuputRule.PRESERVE_NEWEST:
+                                    copyToOutput.InnerText = " PreserveNewest";
+                                    break;
+                            }
+
+                            content.AppendChild(copyToOutput);
+                        }
+                        var targetPath = document.CreateElement("TargetPath");
+                        targetPath.InnerText = cnt.TargetPath;
+                        content.AppendChild(targetPath);
+
+
+                        content.Attributes.Append(CreateAttribute(document, "Include", cnt.Include));
+                        contentGroup.AppendChild(content);
                     }
 
-                    content.Attributes.Append(CreateAttribute(document, "Include", cnt.Include));
-                    contentGroup.AppendChild(content);
                 }
 
                 project.AppendChild(contentGroup);

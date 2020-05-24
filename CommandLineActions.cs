@@ -111,10 +111,16 @@ namespace Parkitool
 
         public static int InstallOptions(InstallOptions options)
         {
+
             ParkitectConfiguration configuration = JsonConvert.DeserializeObject<ParkitectConfiguration>(
                 File.ReadAllText("./" + Constants.PARKITECT_CONFIG_FILE));
+            if (String.IsNullOrEmpty(configuration.Name))
+            {
+                Console.WriteLine("name not set exiting");
+                Environment.Exit(0);
+            }
 
-            DepotDownloader downloader = new DepotDownloader();
+                DepotDownloader downloader = new DepotDownloader();
             String gamePath = Path.Join(Constants.HIDDEN_FOLDER, "Game");
             if (!String.IsNullOrEmpty(options.SteamUsername) && !String.IsNullOrEmpty(options.SteamPassword))
             {
@@ -227,6 +233,7 @@ namespace Parkitool
 
             foreach (var file in matcher.GetResultsInFullPath("./"))
             {
+                Console.WriteLine($"Asset: {file}");
                 project.Content.Add(new Project.ContentGroup
                 {
                     Include = file,
@@ -239,6 +246,7 @@ namespace Parkitool
             {
                 matcher.AddExclude(s);
             }
+
             matcher.AddInclude("*.cs");
             matcher.AddInclude("**/*.cs");
 
@@ -247,7 +255,28 @@ namespace Parkitool
                 project.Compile.Add(file);
             }
 
-            project.OutputPath = Path.Combine(Constants.GetParkitectPath, configuration.Name);
+            if (!String.IsNullOrEmpty(configuration.Workshop))
+            {
+                File.WriteAllLines("./steam_workshop-id", new[] {configuration.Workshop});
+                project.Content.Add(new Project.ContentGroup()
+                {
+                    Include = "./steam_workshop-id",
+                    CopyToOutput = Project.CopyOuputRule.ALWAYS
+                });
+            }
+
+            if (!String.IsNullOrEmpty(configuration.Preview))
+            {
+                project.Content.Add(new Project.ContentGroup()
+                {
+                    Include = configuration.Preview,
+                    CopyToOutput = Project.CopyOuputRule.ALWAYS,
+                    TargetPath = "preview.png"
+                });
+            }
+
+            project.OutputPath = Path.Combine(Constants.GetParkitectPath,
+                !String.IsNullOrEmpty(configuration.Folder) ? configuration.Folder : configuration.Name);
             Console.WriteLine($"Output Path: {project.OutputPath}");
 
             if (!project.Save($"./{configuration.Name}.csproj"))
