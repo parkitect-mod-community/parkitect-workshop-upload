@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Xml;
@@ -151,6 +152,7 @@ namespace Parkitool
                 {
                     String lowerAsmb = asmb.ToLower();
                     String parkitectAssemblyPath = Path.Join(assemblyPath, $"{asmb}.dll");
+                    FileVersionInfo versionInfo = FileVersionInfo.GetVersionInfo(parkitectAssemblyPath);
                     if (File.Exists(parkitectAssemblyPath))
                     {
                         if (lowerAsmb.StartsWith("mono") || lowerAsmb.StartsWith("system") ||
@@ -178,7 +180,7 @@ namespace Parkitool
                             {
                                 Name = asmb,
                                 HintPath = parkitectAssemblyPath,
-                                Version = "0.0.0.0",
+                                Version = versionInfo.FileVersion,
                                 Culture = "neutral",
                                 PublicKeyToken = "null",
                                 IsPrivate = false
@@ -192,7 +194,7 @@ namespace Parkitool
                             {
                                 Name = asmb,
                                 HintPath = parkitectAssemblyPath,
-                                Version = "0.0.0.0",
+                                Version = versionInfo.FileVersion,
                                 Culture = "neutral",
                                 PublicKeyToken = "null",
                                 IsPrivate = false
