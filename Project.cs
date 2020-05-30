@@ -14,7 +14,6 @@ namespace Parkitool
             ALWAYS,
             NEVER,
             PRESERVE_NEWEST
-
         }
 
         public class ContentGroup {

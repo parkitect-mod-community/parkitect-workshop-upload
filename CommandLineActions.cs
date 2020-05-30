@@ -121,7 +121,7 @@ namespace Parkitool
                 Environment.Exit(0);
             }
 
-                DepotDownloader downloader = new DepotDownloader();
+            DepotDownloader downloader = new DepotDownloader();
             String gamePath = Path.Join(Constants.HIDDEN_FOLDER, "Game");
             if (!String.IsNullOrEmpty(options.SteamUsername) && !String.IsNullOrEmpty(options.SteamPassword))
             {
@@ -145,79 +145,130 @@ namespace Parkitool
             Console.WriteLine("Setup Project ...");
             Project project = new Project();
 
-            String assemblyPath = Path.Join(gamePath, Constants.PARKITECT_ASSEMBLY_PATH);
-            foreach (var asmb in configuration.Assemblies)
-            {
-                if (Directory.Exists(assemblyPath))
+            var assemblyMatcher = new Matcher();
+            assemblyMatcher.AddInclude(Path.Join(gamePath, Constants.PARKITECT_ASSEMBLY_PATH) + "/*.dll");
+            if (configuration.Include != null ){
+                foreach (var inc in configuration.Include)
                 {
-                    String lowerAsmb = asmb.ToLower();
-                    String parkitectAssemblyPath = Path.Join(assemblyPath, $"{asmb}.dll");
-                    FileVersionInfo versionInfo = FileVersionInfo.GetVersionInfo(parkitectAssemblyPath);
-                    if (File.Exists(parkitectAssemblyPath))
-                    {
-                        if (lowerAsmb.StartsWith("mono") || lowerAsmb.StartsWith("system") ||
-                            lowerAsmb.StartsWith("microsoft") ||
-                            Constants.SYSTEM_ASSEMBLIES.Contains(asmb))
-                        {
-                            if (Constants.SYSTEM_ASSEMBLIES.Contains(asmb))
-                            {
-                                Console.WriteLine($"Resolved Known Standard System Assembly -- {asmb}");
-                            }
-                            else
-                            {
-                                Console.WriteLine(
-                                    $"Warning: Resolved to Unknown System assembly but found in Parkitect Managed -- {asmb}");
-                            }
+                    assemblyMatcher.AddInclude(inc);
+                }
+            }
+            HashSet<String> targets = new HashSet<String>(configuration.Assemblies);
+            foreach (var file in assemblyMatcher.GetResultsInFullPath("./"))
+            {
+                if(!file.EndsWith(".dll"))
+                    continue;
 
-                            project.Assemblies.Add(new Project.AssemblyInfo
-                            {
-                                Name = asmb
-                            });
-                        }
-                        else if (Constants.PARKITECT_ASSEMBLIES.Contains(asmb))
-                        {
-                            project.Assemblies.Add(new Project.AssemblyInfo
-                            {
-                                Name = asmb,
-                                HintPath = parkitectAssemblyPath,
-                                Version = versionInfo.FileVersion,
-                                Culture = "neutral",
-                                PublicKeyToken = "null",
-                                IsPrivate = false
-                            });
-                            Console.WriteLine(
-                                $"Resolved to Known System assembly but found in Parkitect Managed -- {asmb}");
-                        }
-                        else
-                        {
-                            project.Assemblies.Add(new Project.AssemblyInfo
-                            {
-                                Name = asmb,
-                                HintPath = parkitectAssemblyPath,
-                                Version = versionInfo.FileVersion,
-                                Culture = "neutral",
-                                PublicKeyToken = "null",
-                                IsPrivate = false
-                            });
-                            Console.WriteLine(
-                                $"Warning: Resolved to Unknown System assembly but found in Parkitect managed: -- {asmb}");
-                        }
-                    }
-                    else
+                var asmb = Path.GetFileNameWithoutExtension(file);
+                if (targets.Contains(asmb))
+                {
+                    targets.Remove(asmb);
+                    FileVersionInfo versionInfo = FileVersionInfo.GetVersionInfo(file);
+                    if (Constants.SYSTEM_ASSEMBLIES.Contains(asmb) || asmb.StartsWith("System") || asmb.StartsWith("Mono"))
                     {
-                        project.Assemblies.Add(new Project.AssemblyInfo()
+                        project.Assemblies.Add(new Project.AssemblyInfo
                         {
                             Name = asmb
                         });
-                        Console.WriteLine($"Warning: Unknown Assembly -- {asmb}");
+                        Console.WriteLine(
+                            $"System Assembly {asmb} -- {file}");
+                    }
+                    else
+                    {
+                        project.Assemblies.Add(new Project.AssemblyInfo
+                        {
+                            Name = asmb,
+                            HintPath = file,
+                            Version = versionInfo.FileVersion,
+                            Culture = "neutral",
+                            PublicKeyToken = "null",
+                            IsPrivate = false
+                        });
+                        Console.WriteLine(
+                            $"Resolved Assembly: {asmb} -- {file}");
                     }
                 }
-                else
-                {
-                    Console.WriteLine("Error: Can't find Parkitect Assemblies");
-                    Environment.Exit(0);
-                }
             }
+
+            foreach (var tg in targets)
+            {
+                Console.WriteLine(
+                    $"Unresolved Assembly -- {tg}");
+            }
+
+            // String assemblyPath = Path.Join(gamePath, Constants.PARKITECT_ASSEMBLY_PATH);
+            // foreach (var asmb in configuration.Assemblies)
+            // {
+            //     if (Directory.Exists(assemblyPath))
+            //     {
+            //         String lowerAsmb = asmb.ToLower();
+            //         String parkitectAssemblyPath = Path.Join(assemblyPath, $"{asmb}.dll");
+            //         FileVersionInfo versionInfo = FileVersionInfo.GetVersionInfo(parkitectAssemblyPath);
+            //         if (File.Exists(parkitectAssemblyPath))
+            //         {
+            //             if (lowerAsmb.StartsWith("mono") || lowerAsmb.StartsWith("system") ||
+            //                 lowerAsmb.StartsWith("microsoft") ||
+            //                 Constants.SYSTEM_ASSEMBLIES.Contains(asmb))
+            //             {
+            //                 if (Constants.SYSTEM_ASSEMBLIES.Contains(asmb))
+            //                 {
+            //                     Console.WriteLine($"Resolved Known Standard System Assembly -- {asmb}");
+            //                 }
+            //                 else
+            //                 {
+            //                     Console.WriteLine(
+            //                         $"Warning: Resolved to Unknown System assembly but found in Parkitect Managed -- {asmb}");
+            //                 }
+            //
+            //                 project.Assemblies.Add(new Project.AssemblyInfo
+            //                 {
+            //                     Name = asmb
+            //                 });
+            //             }
+            //             else if (Constants.PARKITECT_ASSEMBLIES.Contains(asmb))
+            //             {
+            //                 project.Assemblies.Add(new Project.AssemblyInfo
+            //                 {
+            //                     Name = asmb,
+            //                     HintPath = parkitectAssemblyPath,
+            //                     Version = versionInfo.FileVersion,
+            //                     Culture = "neutral",
+            //                     PublicKeyToken = "null",
+            //                     IsPrivate = false
+            //                 });
+            //                 Console.WriteLine(
+            //                     $"Resolved to Known System assembly but found in Parkitect Managed -- {asmb}");
+            //             }
+            //             else
+            //             {
+            //                 project.Assemblies.Add(new Project.AssemblyInfo
+            //                 {
+            //                     Name = asmb,
+            //                     HintPath = parkitectAssemblyPath,
+            //                     Version = versionInfo.FileVersion,
+            //                     Culture = "neutral",
+            //                     PublicKeyToken = "null",
+            //                     IsPrivate = false
+            //                 });
+            //                 Console.WriteLine(
+            //                     $"Warning: Resolved to Unknown System assembly but found in Parkitect managed: -- {asmb}");
+            //             }
+            //         }
+            //         else
+            //         {
+            //             project.Assemblies.Add(new Project.AssemblyInfo()
+            //             {
+            //                 Name = asmb
+            //             });
+            //             Console.WriteLine($"Warning: Unknown Assembly -- {asmb}");
+            //         }
+            //     }
+            //     else
+            //     {
+            //         Console.WriteLine("Error: Can't find Parkitect Assemblies");
+            //         Environment.Exit(0);
+            //     }
+            // }
 
             var matcher = new Matcher();
             foreach (var s in Constants.IGNORE_FILES)

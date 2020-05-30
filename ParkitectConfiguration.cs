@@ -19,7 +19,10 @@ namespace Parkitool
         [JsonProperty(PropertyName = "author")] public String Author { get; set; }
         [JsonProperty(PropertyName = "description")] public String Description { get; set; }
         [JsonProperty(PropertyName = "preview")] public String Preview { get; set; }
+
+        [JsonProperty(PropertyName = "include")] public List<String> Include { get; set; }
         [JsonProperty(PropertyName = "assemblies")] public List<String> Assemblies { get; set; }
+
         [JsonProperty(PropertyName = "assets")] public List<String> Assets { get; set; }
 
 
