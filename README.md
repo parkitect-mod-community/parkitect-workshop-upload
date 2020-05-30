@@ -2,6 +2,16 @@
 
 A set of tools that help with modding Parkitect. Setting up `.csproj` downloading parkitect assemblies and configuring output path to the mods directory. 
 
+# Install
+
+This is installed as a dotnet tool and it should be avalible from teh path once installed from nuget.
+
+[https://www.nuget.org/packages/parkitool/](https://www.nuget.org/packages/parkitool/)
+
+```
+dotnet tool install --global parkitool
+```
+
 ## Configuration
 
 ### parkitect.json
