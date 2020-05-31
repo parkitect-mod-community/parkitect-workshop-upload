@@ -192,8 +192,20 @@ namespace Parkitool
 
             foreach (var tg in targets)
             {
-                Console.WriteLine(
-                    $"Unresolved Assembly -- {tg}");
+                if (Constants.SYSTEM_ASSEMBLIES.Contains(tg) || tg.StartsWith("System") || tg.StartsWith("Mono"))
+                {
+                    project.Assemblies.Add(new Project.AssemblyInfo
+                    {
+                        Name = tg
+                    });
+                    Console.WriteLine(
+                        $"System Assembly {tg}");
+                }
+                else
+                {
+                    Console.WriteLine(
+                        $"Unresolved Assembly -- {tg}");
+                }
             }
 
             // String assemblyPath = Path.Join(gamePath, Constants.PARKITECT_ASSEMBLY_PATH);
@@ -327,6 +339,10 @@ namespace Parkitool
                     TargetPath = "preview.png"
                 });
             }
+
+            project.None.Add("parkitect.json");
+            if(File.Exists("packages.config"))
+                project.None.Add("packages.config");
 
             project.OutputPath = Path.Combine(Constants.GetParkitectPath,
                 !String.IsNullOrEmpty(configuration.Folder) ? configuration.Folder : configuration.Name);

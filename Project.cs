@@ -19,7 +19,6 @@ namespace Parkitool
         public class ContentGroup {
             public String Include { get; set; }
             public CopyOuputRule CopyToOutput { get; set; }
-
             public String TargetPath { get; set; }
         }
 
@@ -37,6 +36,7 @@ namespace Parkitool
         public List<ContentGroup> Content { get; } = new List<ContentGroup>();
         public List<String> Compile { get; } = new List<String>();
 
+        public List<String> None { get; } = new List<string>();
         public String OutputPath { get; set; } = "./bin";
 
         private XmlAttribute CreateAttribute(XmlDocument document, String name, String value) {
@@ -222,6 +222,19 @@ namespace Parkitool
 
                 project.AppendChild(contentGroup);
             }
+
+            if (None.Count > 0)
+            {
+                var contentGroup = document.CreateElement("ItemGroup");
+                foreach (var cnt in None)
+                {
+                    var nn = document.CreateElement("None");
+                    nn.Attributes.Append(CreateAttribute(document, "Include", cnt));
+                    contentGroup.AppendChild(nn);
+                }
+                project.AppendChild(contentGroup);
+            }
+
             // -------------------------------------------------------------------------------------------------------------------
 
             var imp = document.CreateElement("Import");
