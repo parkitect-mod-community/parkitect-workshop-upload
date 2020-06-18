@@ -312,8 +312,18 @@ namespace Parkitool
                 matcher.AddExclude(s);
             }
 
-            matcher.AddInclude("*.cs");
-            matcher.AddInclude("**/*.cs");
+            if (configuration.Sources != null)
+            {
+                foreach (var source in configuration.Sources)
+                {
+                    matcher.AddInclude(source);
+                }
+            }
+            else
+            {
+                matcher.AddInclude("*.cs");
+                matcher.AddInclude("**/*.cs");
+            }
 
             foreach (var file in matcher.GetResultsInFullPath("./"))
             {
