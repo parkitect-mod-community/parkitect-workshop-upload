@@ -36,13 +36,17 @@ namespace Parkitool
         public List<String> Include { get; set; }
 
         [JsonProperty(PropertyName = "assemblies")]
-        public List<String> Assemblies { get; set; }
+        public List<String> Assemblies { get; set; } = new List<string>();
+
+        [JsonProperty(PropertyName = "additionalAssemblies")]
+        public List<String> AdditionalAssemblies { get; set; } = new List<string>();
 
         [JsonProperty(PropertyName = "assets")]
         public List<String> Assets { get; set; }
 
         [JsonProperty(PropertyName = "sources")]
         public List<String> Sources { get; set; }
+
 
     }
 }

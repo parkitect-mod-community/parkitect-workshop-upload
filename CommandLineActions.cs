@@ -153,7 +153,13 @@ namespace Parkitool
                     assemblyMatcher.AddInclude(inc);
                 }
             }
+
+            HashSet<String> additionalTargets = new HashSet<String>(configuration.AdditionalAssemblies);
             HashSet<String> targets = new HashSet<String>(configuration.Assemblies);
+            foreach (var additionalTarget in additionalTargets) {
+                targets.Add(additionalTarget);
+            }
+
             foreach (var file in assemblyMatcher.GetResultsInFullPath("./"))
             {
                 if(!file.EndsWith(".dll"))
@@ -179,10 +185,10 @@ namespace Parkitool
                         {
                             Name = asmb,
                             HintPath = file,
-                            Version = versionInfo.FileVersion,
+                            Version = versionInfo.ProductVersion,
                             Culture = "neutral",
                             PublicKeyToken = "null",
-                            IsPrivate = false
+                            IsPrivate = additionalTargets.Contains(asmb)
                         });
                         Console.WriteLine(
                             $"Resolved Assembly: {asmb} -- {file}");
